@@ -10,7 +10,7 @@ from googletrans import Translator
 st.set_page_config(page_title="YouTube Video Summarizer", layout="wide")
 
 # Permanent Google API Key
-google_api_key = "YOUR_API_KEY_HERE"
+google_api_key = "AIzaSyCzPf0rX7LUBC4DiHlP1B3jBs0a0hT7B88"
 
 # Sidebar for user inputs
 youtube_link = st.sidebar.text_input("Enter YouTube Video Link:")
