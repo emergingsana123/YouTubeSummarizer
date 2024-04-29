@@ -8,6 +8,31 @@ import io
 # Set Streamlit page configuration
 st.set_page_config(page_title="YouTube Video Summarizer", layout="wide")
 
+# Define custom colors
+primary_color = "#008080"  # Dark cyan
+secondary_color = "#ffd700"  # Gold
+background_color = "#f0f8ff"  # Alice blue
+
+# Set page background color
+st.markdown(f"""
+    <style>
+        .reportview-container {{
+            background-color: {background_color};
+        }}
+        .sidebar .sidebar-content {{
+            background-color: {primary_color};
+            color: white;
+        }}
+        .Widget>label {{
+            color: {secondary_color};
+        }}
+        .stButton>button {{
+            color: {primary_color};
+            background-color: {secondary_color};
+        }}
+    </style>
+""", unsafe_allow_html=True)
+
 # Sidebar for user inputs
 google_api_key = st.sidebar.text_input("Enter your Google API Key:", type="password")
 youtube_link = st.sidebar.text_input("Enter YouTube Video Link:")
