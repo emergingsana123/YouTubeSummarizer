@@ -90,15 +90,18 @@ if google_api_key and youtube_link and st.button("Get Detailed Notes"):
             st.write(summary)
             
             # Language translation
-            if target_lang != 'English':
-                translated_summary = translate_text(summary, [key for key, value in language_codes.items() if value == target_lang][0])
-                st.info(f"Summary translated to {language_codes[target_lang]}.")
-                st.write(translated_summary)
+            if target_lang in language_codes:
+                if target_lang != 'English':
+                    translated_summary = translate_text(summary, [key for key, value in language_codes.items() if value == target_lang][0])
+                    st.info(f"Summary translated to {language_codes[target_lang]}.")
+                    st.write(translated_summary)
+                else:
+                    st.info("No translation required.")
             else:
-                st.info("No translation required.")
+                st.error("Invalid target language selected.")
             
             # PDF download
-            pdf_bytes = create_pdf(summary)
+            pdf_bytes = create_pdf(translated_summary if target_lang != 'English' else summary)
             st.download_button(label="Download Summary as PDF",
                                data=pdf_bytes,
                                file_name="YouTube_Summary.pdf",
