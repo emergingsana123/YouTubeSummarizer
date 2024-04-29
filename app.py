@@ -1,21 +1,35 @@
 import streamlit as st
-import google.generativeai as genai
 from youtube_transcript_api import YouTubeTranscriptApi
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import io
+from googletrans import Translator
 
 # Set Streamlit page configuration
 st.set_page_config(page_title="YouTube Video Summarizer", layout="wide")
 
 # Sidebar for user inputs
-google_api_key = st.sidebar.text_input("Enter your Google API Key:", type="password")
 youtube_link = st.sidebar.text_input("Enter YouTube Video Link:")
 
-# Summary length customization
-summary_length = st.sidebar.select_slider(
-    "Select Summary Length:", options=['Short', 'Medium', 'Long'], value='Medium'
-)
+# Language translation
+translator = Translator()
+
+# Define language codes and their names
+language_codes = {
+    'af': 'afrikaans', 'sq': 'albanian', 'am': 'amharic', 'ar': 'arabic', 'hy': 'armenian', 'az': 'azerbaijani', 'eu': 'basque',
+    'be': 'belarusian', 'bn': 'bengali', 'bs': 'bosnian', 'bg': 'bulgarian', 'ca': 'catalan', 'ceb': 'cebuano', 'ny': 'chichewa',
+    'zh-cn': 'chinese (simplified)', 'zh-tw': 'chinese (traditional)', 'co': 'corsican', 'hr': 'croatian', 'cs': 'czech', 'da': 'danish',
+    'nl': 'dutch', 'en': 'english', 'eo': 'esperanto', 'et': 'estonian', 'tl': 'filipino', 'fi': 'finnish', 'fr': 'french', 'fy': 'frisian',
+    'gl': 'galician', 'ka': 'georgian', 'de': 'german', 'el': 'greek', 'gu': 'gujarati', 'ht': 'haitian creole', 'ha': 'hausa', 'haw': 'hawaiian',
+    'iw': 'hebrew', 'he': 'hebrew', 'hi': 'hindi', 'hmn': 'hmong', 'hu': 'hungarian', 'is': 'icelandic', 'ig': 'igbo', 'id': 'indonesian', 'ga': 'irish',
+    'it': 'italian', 'ja': 'japanese', 'jw': 'javanese', 'kn': 'kannada', 'kk': 'kazakh', 'km': 'khmer', 'ko': 'korean', 'ku': 'kurdish (kurmanji)', 'ky': 'kyrgyz',
+    'lo': 'lao', 'la': 'latin', 'lv': 'latvian', 'lt': 'lithuanian', 'lb': 'luxembourgish', 'mk': 'macedonian', 'mg': 'malagasy', 'ms': 'malay', 'ml': 'malayalam',
+    'mt': 'maltese', 'mi': 'maori', 'mr': 'marathi', 'mn': 'mongolian', 'my': 'myanmar (burmese)', 'ne': 'nepali', 'no': 'norwegian', 'or': 'odia', 'ps': 'pashto',
+    'fa': 'persian', 'pl': 'polish', 'pt': 'portuguese', 'pa': 'punjabi', 'ro': 'romanian', 'ru': 'russian', 'sm': 'samoan', 'gd': 'scots gaelic', 'sr': 'serbian',
+    'st': 'sesotho', 'sn': 'shona', 'sd': 'sindhi', 'si': 'sinhala', 'sk': 'slovak', 'sl': 'slovenian', 'so': 'somali', 'es': 'spanish', 'su': 'sundanese', 'sw': 'swahili',
+    'sv': 'swedish', 'tg': 'tajik', 'ta': 'tamil', 'te': 'telugu', 'th': 'thai', 'tr': 'turkish', 'uk': 'ukrainian', 'ur': 'urdu', 'ug': 'uyghur', 'uz': 'uzbek',
+    'vi': 'vietnamese', 'cy': 'welsh', 'xh': 'xhosa', 'yi': 'yiddish', 'yo': 'yoruba', 'zu': 'zulu'
+}
 
 # Define functions
 def extract_transcript_details(youtube_video_url):
@@ -27,15 +41,9 @@ def extract_transcript_details(youtube_video_url):
         st.sidebar.error(f"An error occurred: {e}")
         return None
 
-def generate_gemini_content(transcript_text, prompt, api_key):
-    try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-pro")
-        response = model.generate_content(prompt + transcript_text)
-        return response.text
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
-        return None
+def translate_text(text, target_lang):
+    translation = translator.translate(text, dest=target_lang)
+    return translation.text
 
 def create_pdf(summary_text):
     buffer = io.BytesIO()
@@ -54,30 +62,27 @@ def create_pdf(summary_text):
 # UI elements
 st.title("YouTube Video Summarizer")
 
-# Display video thumbnail
-if youtube_link:
-    video_id = youtube_link.split("=")[1]
-    video_thumbnail = f"http://img.youtube.com/vi/{video_id}/0.jpg"
-    st.image(video_thumbnail, caption="Video Thumbnail", use_column_width=True)
-
 # Process and display summary
-if google_api_key and youtube_link and st.button("Get Detailed Notes"):
+if youtube_link and st.button("Get Detailed Notes"):
     transcript_text = extract_transcript_details(youtube_link)
     if transcript_text:
-        prompt = """You are a YouTube video summarizer. Summarize the video content into key points within 1500 words."""
-        customized_prompt = f"{prompt} Please generate a {summary_length.lower()} summary."
-        summary = generate_gemini_content(transcript_text, customized_prompt, google_api_key)
-        if summary:
-            st.success("Transcript extracted and summary generated successfully!")
-            st.subheader("Detailed Notes:")
-            st.write(summary)
-            # PDF download
-            pdf_bytes = create_pdf(summary)
-            st.download_button(label="Download Summary as PDF",
-                               data=pdf_bytes,
-                               file_name="YouTube_Summary.pdf",
-                               mime="application/pdf")
-        else:
-            st.error("Failed to generate summary.")
+        st.success("Transcript extracted successfully!")
+        
+        # Language translation
+        target_lang = st.selectbox("Select Target Language:", options=list(language_codes.values()))
+        target_lang_code = [key for key, value in language_codes.items() if value == target_lang][0]
+        if target_lang_code != 'en':
+            transcript_text = translate_text(transcript_text, target_lang_code)
+            st.info(f"Transcript translated to {target_lang.upper()}.")
+
+        st.subheader("Detailed Notes:")
+        st.write(transcript_text)
+        
+        # PDF download
+        pdf_bytes = create_pdf(transcript_text)
+        st.download_button(label="Download Transcript as PDF",
+                           data=pdf_bytes,
+                           file_name="YouTube_Transcript.pdf",
+                           mime="application/pdf")
     else:
         st.error("Failed to extract transcript.")
