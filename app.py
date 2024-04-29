@@ -6,32 +6,71 @@ from reportlab.pdfgen import canvas
 import io
 
 # Set Streamlit page configuration
-st.set_page_config(page_title="YouTube Video Summarizer", layout="wide")
+st.set_page_config(page_title="YouTube Video Summarizer", layout="wide", initial_sidebar_state="expanded", page_icon="📹")
 
-# Define custom colors
-primary_color = "#008080"  # Dark cyan
-secondary_color = "#ffd700"  # Gold
-background_color = "#f0f8ff"  # Alice blue
-
-# Set page background color
-st.markdown(f"""
+# Customizing Streamlit theme
+primary_color = "#ff6347"  # Coral
+secondary_color = "#00ced1"  # Dark Turquoise
+background_color = "#f0f8ff"  # Alice Blue
+text_color = "#000000"  # Black
+st.markdown(
+    f"""
     <style>
-        .reportview-container {{
-            background-color: {background_color};
+        .reportview-container .main .block-container{{
+            max-width: 1000px;
+            padding-top: 2rem;
+            padding-right: 2rem;
+            padding-left: 2rem;
+            padding-bottom: 2rem;
         }}
         .sidebar .sidebar-content {{
+            background-color: {secondary_color};
+        }}
+        .sidebar .sidebar-content .block-container {{
+            color: {text_color};
+        }}
+        .sidebar .sidebar-content .stButton>button {{
+            color: {text_color};
             background-color: {primary_color};
-            color: white;
+            border-radius: 5px;
+        }}
+        .sidebar .sidebar-content .stButton>button:hover {{
+            background-color: {secondary_color};
         }}
         .Widget>label {{
-            color: {secondary_color};
+            color: {text_color};
         }}
-        .stButton>button {{
-            color: {primary_color};
+        .stSelectbox>div>div>div {{
+            color: {text_color};
+            background-color: {secondary_color};
+        }}
+        .stTextInput>div>div>input {{
+            color: {text_color};
+            background-color: {secondary_color};
+        }}
+        .stTextInput>div>div>input:focus {{
+            background-color: {background_color};
+        }}
+        .stSlider>div>div>div>div>div {{
+            background-color: {primary_color};
+        }}
+        .stSlider>div>div>div>div>div>div {{
+            background-color: {primary_color};
+        }}
+        .stMarkdown {{
+            color: {text_color};
+        }}
+        .stDataFrame>div>div>div>table {{
+            background-color: {background_color};
+            color: {text_color};
+        }}
+        .stDataFrame>div>div>div>table>thead {{
             background-color: {secondary_color};
         }}
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
 
 # Sidebar for user inputs
 google_api_key = st.sidebar.text_input("Enter your Google API Key:", type="password")
