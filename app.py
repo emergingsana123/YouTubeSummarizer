@@ -9,8 +9,10 @@ from googletrans import Translator
 # Set Streamlit page configuration
 st.set_page_config(page_title="YouTube Video Summarizer", layout="wide")
 
+# Permanent Google API Key
+google_api_key = "YOUR_API_KEY_HERE"
+
 # Sidebar for user inputs
-google_api_key = st.sidebar.text_input("Enter your Google API Key:", type="password")
 youtube_link = st.sidebar.text_input("Enter YouTube Video Link:")
 
 # Summary length customization
@@ -68,34 +70,37 @@ if youtube_link:
     video_thumbnail = f"http://img.youtube.com/vi/{video_id}/0.jpg"
     st.image(video_thumbnail, caption="Video Thumbnail", use_column_width=True)
 
-# Process and display summary
-if google_api_key and youtube_link and st.button("Get Detailed Notes"):
-    transcript_text = extract_transcript_details(youtube_link)
-    if transcript_text:
-        prompt = """You are a YouTube video summarizer. Summarize the video content into key points within 1500 words."""
-        customized_prompt = f"{prompt} Please generate a {summary_length.lower()} summary."
-        summary = generate_gemini_content(transcript_text, customized_prompt, google_api_key)
-        if summary:
-            st.success("Transcript extracted and summary generated successfully!")
-            st.subheader("Detailed Notes:")
-            st.write(summary)
-            
-            # Language translation
-            target_lang = st.selectbox("Select Target Language:", options=['en', 'fr', 'es', 'de'])
-            if target_lang != 'en':
-                translated_summary = translate_text(summary, target_lang)
-                st.info(f"Summary translated to {translator.translate(target_lang, dest='en').text}.")
-                st.write(translated_summary)
+# Language selection and summary generation
+target_lang = st.selectbox("Select Target Language:", options=['en', 'fr', 'es', 'de'])
+if st.button("Generate Summary"):
+    if google_api_key and youtube_link:
+        transcript_text = extract_transcript_details(youtube_link)
+        if transcript_text:
+            prompt = """You are a YouTube video summarizer. Summarize the video content into key points within 1500 words."""
+            customized_prompt = f"{prompt} Please generate a {summary_length.lower()} summary."
+            summary = generate_gemini_content(transcript_text, customized_prompt, google_api_key)
+            if summary:
+                st.success("Transcript extracted and summary generated successfully!")
+                st.subheader("Detailed Notes:")
+                st.write(summary)
+                
+                # Language translation
+                if target_lang != 'en':
+                    translated_summary = translate_text(summary, target_lang)
+                    st.info(f"Summary translated to {translator.translate(target_lang, dest='en').text}.")
+                    st.write(translated_summary)
+                else:
+                    st.info("No translation required.")
+                
+                # PDF download
+                pdf_bytes = create_pdf(translated_summary if target_lang != 'en' else summary)
+                st.download_button(label="Download Summary as PDF",
+                                   data=pdf_bytes,
+                                   file_name="YouTube_Summary.pdf",
+                                   mime="application/pdf")
             else:
-                st.info("No translation required.")
-            
-            # PDF download
-            pdf_bytes = create_pdf(summary)
-            st.download_button(label="Download Summary as PDF",
-                               data=pdf_bytes,
-                               file_name="YouTube_Summary.pdf",
-                               mime="application/pdf")
+                st.error("Failed to generate summary.")
         else:
-            st.error("Failed to generate summary.")
+            st.error("Failed to extract transcript.")
     else:
-        st.error("Failed to extract transcript.")
+        st.error("Google API Key or YouTube link is missing.")
