@@ -1,10 +1,9 @@
-import streamlit as st
+ import streamlit as st
 import google.generativeai as genai
 from youtube_transcript_api import YouTubeTranscriptApi
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import io
-from googletrans import Translator
 
 # Set Streamlit page configuration
 st.set_page_config(page_title="YouTube Video Summarizer", layout="wide")
@@ -17,18 +16,6 @@ youtube_link = st.sidebar.text_input("Enter YouTube Video Link:")
 summary_length = st.sidebar.select_slider(
     "Select Summary Length:", options=['Short', 'Medium', 'Long'], value='Medium'
 )
-
-# Language selection
-language_codes = {
-    'en': 'English',
-    'fr': 'French',
-    'es': 'Spanish',
-    'de': 'German'
-}
-target_lang = st.sidebar.selectbox("Select Target Language:", options=list(language_codes.values()))
-
-# Language translation
-translator = Translator()
 
 # Define functions
 def extract_transcript_details(youtube_video_url):
@@ -49,10 +36,6 @@ def generate_gemini_content(transcript_text, prompt, api_key):
     except Exception as e:
         st.error(f"An error occurred: {e}")
         return None
-
-def translate_text(text, target_lang):
-    translation = translator.translate(text, dest=target_lang)
-    return translation.text
 
 def create_pdf(summary_text):
     buffer = io.BytesIO()
@@ -88,20 +71,8 @@ if google_api_key and youtube_link and st.button("Get Detailed Notes"):
             st.success("Transcript extracted and summary generated successfully!")
             st.subheader("Detailed Notes:")
             st.write(summary)
-            
-            # Language translation
-            if target_lang in language_codes:
-                if target_lang != 'English':
-                    translated_summary = translate_text(summary, [key for key, value in language_codes.items() if value == target_lang][0])
-                    st.info(f"Summary translated to {language_codes[target_lang]}.")
-                    st.write(translated_summary)
-                else:
-                    st.info("No translation required.")
-            else:
-                st.error("Invalid target language selected.")
-            
             # PDF download
-            pdf_bytes = create_pdf(translated_summary if target_lang != 'English' else summary)
+            pdf_bytes = create_pdf(summary)
             st.download_button(label="Download Summary as PDF",
                                data=pdf_bytes,
                                file_name="YouTube_Summary.pdf",
